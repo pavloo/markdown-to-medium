@@ -60,7 +60,6 @@ function main (options, done) {
     throw new Error('Could not read file from /src/posts/' + filename)
   }
 
-  uploadImages(src, options);
 
   const matter = frontMatter(src)
   let title = options.title || matter.attributes.title
@@ -107,31 +106,35 @@ function main (options, done) {
 
     const successMsg = `Draft post "${title}" published to Medium.com`.green
 
-    if (publication) {
-      client.getPublicationsForUser({userId: user.id}, (err, publications) => {
-        if (err) {
-          throw new Error(err)
-        }
-        const myPub = publications.filter((val) => { return val.name === publication })
-        if (myPub.length === 0) {
-          throw new Error('No publication by that name!')
-        }
-        client.createPostInPublication(Object.assign(options, {publicationId: myPub[0].id}), (err, post) => {
+    uploadImages(src, { token: token }, (err, result) => {
+      console.log(result);
+      if (err) throw new Error(err);
+      if (publication) {
+        client.getPublicationsForUser({userId: user.id}, (err, publications) => {
+          if (err) {
+            throw new Error(err)
+          }
+          const myPub = publications.filter((val) => { return val.name === publication })
+          if (myPub.length === 0) {
+            throw new Error('No publication by that name!')
+          }
+          client.createPostInPublication(Object.assign(options, {publicationId: myPub[0].id}), (err, post) => {
+            if (err) {
+              throw new Error(err)
+            }
+            console.log(successMsg)
+            open(post.url)
+          })
+        })
+      } else {
+        client.createPost(options, (err, post) => {
           if (err) {
             throw new Error(err)
           }
           console.log(successMsg)
           open(post.url)
         })
-      })
-    } else {
-      client.createPost(options, (err, post) => {
-        if (err) {
-          throw new Error(err)
-        }
-        console.log(successMsg)
-        open(post.url)
-      })
-    }
+      }
+    });
   })
 }
