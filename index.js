@@ -6,6 +6,8 @@ const open = require('open')
 const fs = require('fs')
 const getTitle = require('get-md-title')
 
+const uploadImages = require('./lib/upload-images');
+
 require('colors') // I guess this is extending strings :/
 
 module.exports = main
@@ -57,6 +59,8 @@ function main (options, done) {
   } catch (e) {
     throw new Error('Could not read file from /src/posts/' + filename)
   }
+
+  uploadImages(src, options);
 
   const matter = frontMatter(src)
   let title = options.title || matter.attributes.title
